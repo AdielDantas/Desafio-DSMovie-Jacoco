@@ -81,6 +81,10 @@ public class MovieEntity {
 		return scores;
 	}
 
+	public void setScores(Set<ScoreEntity> scores) {
+		this.scores = scores;
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(id);

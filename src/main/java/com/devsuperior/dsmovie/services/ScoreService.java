@@ -1,5 +1,6 @@
 package com.devsuperior.dsmovie.services;
 
+import com.devsuperior.dsmovie.utils.ScoreCustomUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,9 @@ import com.devsuperior.dsmovie.repositories.MovieRepository;
 import com.devsuperior.dsmovie.repositories.ScoreRepository;
 import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class ScoreService {
 
@@ -24,34 +28,32 @@ public class ScoreService {
 	
 	@Autowired
 	private ScoreRepository scoreRepository;
-	
+
 	@Transactional
 	public MovieDTO saveScore(ScoreDTO dto) {
-		
+
 		UserEntity user = userService.authenticated();
-		
+
 		MovieEntity movie = movieRepository.findById(dto.getMovieId())
-				.orElseThrow(() -> new ResourceNotFoundException("Recurso não encontrado"));		
-		
+				.orElseThrow(() -> new ResourceNotFoundException("Recurso não encontrado"));
+
 		ScoreEntity score = new ScoreEntity();
 		score.setMovie(movie);
 		score.setUser(user);
 		score.setValue(dto.getScore());
-		
+
 		score = scoreRepository.saveAndFlush(score);
-		
-		double sum = 0.0;
-		for (ScoreEntity s : movie.getScores()) {
-			sum = sum + s.getValue();
-		}
-			
-		double avg = sum / movie.getScores().size();
-		
+
+		List<ScoreEntity> scoresList = new ArrayList<>(movie.getScores());
+
+		double avg = ScoreCustomUtil.calculateAverage(scoresList);
+		int count = ScoreCustomUtil.getScoreCount(scoresList);
+
 		movie.setScore(avg);
-		movie.setCount(movie.getScores().size());
-		
+		movie.setCount(count);
+
 		movie = movieRepository.save(movie);
-		
+
 		return new MovieDTO(movie);
 	}
 }
